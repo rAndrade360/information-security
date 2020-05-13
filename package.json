@@ -1,0 +1,9 @@
+{
+  "name": "information-security",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "helmet": "^3.22.0"
+  }
+}
