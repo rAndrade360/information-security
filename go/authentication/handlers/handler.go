@@ -80,11 +80,13 @@ func (h *HTTPHandler) Login(rw http.ResponseWriter, r *http.Request) {
 	claims := token.Claims.(jwt.MapClaims)
 	claims["id"] = 1
 	claims["username"] = user
+	claims["access_token"] = true
 	claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
 
 	rtclaims := refresh_token.Claims.(jwt.MapClaims)
 	rtclaims["exp"] = time.Now().Add(time.Hour * 6).Unix()
 	rtclaims["id"] = 1
+	rtclaims["refresh_token"] = true
 
 	t, err := token.SignedString([]byte("secret"))
 	if err != nil {
@@ -121,6 +123,12 @@ func (h *HTTPHandler) authMiddleware(r *http.Request) error {
 	_, err := jwt.ParseWithClaims(token, claims, func(t *jwt.Token) (interface{}, error) {
 		return []byte("secret"), nil
 	})
+
+	access_token := claims["access_token"]
+
+	if access_token == nil {
+		return errors.New("invalid token")
+	}
 
 	if err != nil {
 		return err
