@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -98,4 +99,32 @@ func (h *HTTPHandler) Login(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprint(rw, map[string]string{"token": t, "refresh_token": rt})
+}
+
+func (h *HTTPHandler) Private(rw http.ResponseWriter, r *http.Request) {
+	err := h.authMiddleware(r)
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	fmt.Fprintf(rw, "You can acess this content!\n")
+}
+
+func (h *HTTPHandler) authMiddleware(r *http.Request) error {
+	token := r.Header.Get("Authorization")
+	if token == "" {
+		return errors.New("token not provided")
+	}
+
+	claims := jwt.MapClaims{}
+	_, err := jwt.ParseWithClaims(token, claims, func(t *jwt.Token) (interface{}, error) {
+		return []byte("secret"), nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
